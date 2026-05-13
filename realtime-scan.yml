@@ -1,0 +1,93 @@
+name: Realtime Stock Monitor
+
+on:
+  schedule:
+    # 盘中实时扫描：每5分钟一次（北京时间）
+    # 9:30-11:30 和 13:00-14:55 是有效交易时段
+    - cron: '*/5 1,2 * * 1-5'   # 9:30-10:00, 10:30-11:00, 11:30-12:00
+    - cron: '30 1 * * 1-5'       # 9:30 早盘开盘
+    - cron: '30 5 * * 1-5'      # 13:30 午盘开盘
+
+  workflow_dispatch:  # 支持手动触发
+
+  repository_dispatch:
+    types: [realtime-scan]
+
+jobs:
+  realtime-scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install requests pandas
+
+      - name: Check trading time
+        id: trading-check
+        run: |
+          # 检查是否在交易时段
+          HOUR=$(date +%H)
+          MINUTE=$(date +%M)
+          DAY=$(date +%u)  # 1=周一
+
+          # 周末休市
+          if [ "$DAY" -ge 6 ]; then
+            echo "is_trading=false"
+            echo "reason=Weekend"
+            exit 0
+          fi
+
+          # 转换为分钟数
+          TOTAL_MIN=$((10#$HOUR * 60 + 10#$MINUTE))
+
+          # 早盘 9:30-11:30 (570-690)
+          MORNING_START=570
+          MORNING_END=690
+
+          # 午盘 13:00-14:55 (780-895)
+          AFTERNOON_START=780
+          AFTERNOON_END=895
+
+          if [ $TOTAL_MIN -ge $MORNING_START ] && [ $TOTAL_MIN -le $MORNING_END ]; then
+            echo "is_trading=true"
+            echo "reason=Morning session"
+          elif [ $TOTAL_MIN -ge $AFTERNOON_START ] && [ $TOTAL_MIN -le $AFTERNOON_END ]; then
+            echo "is_trading=true"
+            echo "reason=Afternoon session"
+          else
+            echo "is_trading=false"
+            echo "reason=Outside trading hours"
+          fi
+
+      - name: Run realtime scan
+        if: steps.trading-check.outputs.is_trading == 'true'
+        env:
+          SCKEY: ${{ secrets.SCKEY }}
+        run: |
+          echo "交易时段，执行盘中扫描..."
+          python realtime_monitor.py --incremental
+
+      - name: Skip outside trading hours
+        if: steps.trading-check.outputs.is_trading == 'false'
+        run: |
+          echo "非交易时段，跳过扫描"
+          echo "原因: ${{ steps.trading-check.outputs.reason }}"
+
+      - name: Deploy to GitHub Pages
+        if: steps.trading-check.outputs.is_trading == 'true'
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./output
+          publish_branch: gh-pages
