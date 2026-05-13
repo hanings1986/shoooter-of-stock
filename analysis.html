@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>股票分析报告 | 股坛狙击手</title>
+    <style>
+        :root {
+            --bg-primary: #0a0e17;
+            --bg-secondary: #111827;
+            --bg-card: #1a2235;
+            --neon-green: #00ff88;
+            --neon-blue: #00d4ff;
+            --neon-purple: #b44aff;
+            --neon-red: #ff4757;
+            --neon-orange: #ffa502;
+            --text-primary: #ffffff;
+            --text-secondary: #94a3b8;
+            --border: #2d3a4f;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+        
+        /* Header */
+        .header {
+            background: var(--bg-secondary);
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .header-content {
+            max-width: 600px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .logo {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--neon-green);
+        }
+        
+        .logo::before { content: '🎯 '; }
+        
+        .back-link {
+            color: var(--neon-blue);
+            text-decoration: none;
+            font-size: 14px;
+        }
+        
+        .back-link:hover { text-decoration: underline; }
+        
+        /* Main Content */
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        /* Stock Header */
+        .stock-header {
+            background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-secondary) 100%);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+        }
+        
+        .stock-name {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        
+        .stock-code {
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-bottom: 16px;
+        }
+        
+        .price-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .price-item {
+            background: var(--bg-primary);
+            padding: 12px 16px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .price-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+        
+        .price-value {
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        .price-up { color: var(--neon-red); }
+        .price-down { color: var(--neon-green); }
+        
+        /* Score Card */
+        .score-card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+            text-align: center;
+        }
+        
+        .score-title {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+        }
+        
+        .score-circle {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: conic-gradient(var(--neon-green) var(--score-percent), var(--border) 0);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            position: relative;
+        }
+        
+        .score-inner {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: var(--bg-card);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+        
+        .score-number {
+            font-size: 32px;
+            font-weight: bold;
+            color: var(--neon-green);
+        }
+        
+        .score-max {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        
+        .score-label {
+            font-size: 16px;
+            color: var(--neon-green);
+        }
+        
+        /* Signal Reasons */
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .signal-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .signal-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 16px;
+            border-left: 4px solid var(--neon-green);
+        }
+        
+        .signal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .signal-name {
+            font-weight: bold;
+            font-size: 16px;
+        }
+        
+        .signal-score {
+            background: var(--neon-green);
+            color: var(--bg-primary);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .signal-detail {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+        
+        .signal-check {
+            font-size: 13px;
+            color: var(--neon-green);
+        }
+        
+        .signal-check::before {
+            content: '✓ ';
+        }
+        
+        /* Indicators */
+        .indicators-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .indicator-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 16px;
+        }
+        
+        .indicator-name {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+        
+        .indicator-value {
+            font-size: 16px;
+            font-weight: bold;
+        }
+        
+        .indicator-status {
+            font-size: 12px;
+            margin-top: 4px;
+        }
+        
+        .status-good { color: var(--neon-green); }
+        .status-warning { color: var(--neon-orange); }
+        .status-bad { color: var(--neon-red); }
+        
+        /* Risk Section */
+        .risk-section {
+            background: linear-gradient(135deg, rgba(255, 71, 87, 0.1) 0%, rgba(255, 71, 87, 0.05) 100%);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 71, 87, 0.3);
+        }
+        
+        .risk-title {
+            color: var(--neon-red);
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .risk-item {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            padding-left: 16px;
+            position: relative;
+        }
+        
+        .risk-item::before {
+            content: '⚠️';
+            position: absolute;
+            left: 0;
+        }
+        
+        /* Trading Suggestion */
+        .trading-section {
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.1) 0%, rgba(0, 255, 136, 0.05) 100%);
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid rgba(0, 255, 136, 0.3);
+        }
+        
+        .trading-title {
+            color: var(--neon-green);
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 12px;
+        }
+        
+        .trading-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .trading-item:last-child { border-bottom: none; }
+        
+        .trading-label { color: var(--text-secondary); }
+        
+        .trading-value { font-weight: bold; }
+        
+        /* Meta Info */
+        .meta-info {
+            text-align: center;
+            padding: 20px;
+            color: var(--text-secondary);
+            font-size: 12px;
+        }
+        
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border);
+            border-top-color: var(--neon-green);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .loading-text {
+            color: var(--text-secondary);
+        }
+        
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+        }
+        
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+        
+        .empty-title {
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+        
+        .empty-desc {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <span class="logo">股坛狙击手</span>
+            <a href="index.html" class="back-link">← 返回首页</a>
+        </div>
+    </header>
+    
+    <main class="container" id="main">
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <div class="loading-text">正在加载分析数据...</div>
+        </div>
+    </main>
+    
+    <script>
+        // 获取URL参数
+        function getQueryParam(name) {
+            const params = new URLSearchParams(window.location.search);
+            return params.get(name);
+        }
+        
+        // 解码信号列表
+        function decodeSignals(signalStr) {
+            if (!signalStr) return [];
+            return signalStr.split(',').map(s => s.trim()).filter(s => s);
+        }
+        
+        // 获取信号详情
+        function getSignalInfo(signalCode) {
+            const signals = {
+                'trend_pullback': {
+                    name: '趋势回调买点',
+                    score: 25,
+                    details: [
+                        'MA10 > MA20 向上趋势',
+                        '价格在MA10上方企稳',
+                        '近3日回调3%-8%',
+                        '未跌破MA20支撑'
+                    ],
+                    checks: [
+                        '趋势完好，上升通道保持',
+                        '回调幅度符合买入区间',
+                        '缩量整理，主力未出逃'
+                    ]
+                },
+                'macd_golden': {
+                    name: 'MACD金叉',
+                    score: 18,
+                    details: [
+                        'DIF从下方穿越DEA',
+                        '绿柱缩短，红柱出现',
+                        '能量柱开始放大'
+                    ],
+                    checks: [
+                        '金叉形成，短期看多',
+                        '能量配合良好'
+                    ]
+                },
+                'rsi_rebound': {
+                    name: 'RSI超卖反弹',
+                    score: 15,
+                    details: [
+                        'RSI(14)从超卖区反弹',
+                        '从30以下回升至35+',
+                        '量能配合放大'
+                    ],
+                    checks: [
+                        'RSI底部反转信号',
+                        '反弹动能充足'
+                    ]
+                },
+                'ma10_support': {
+                    name: 'MA10均线支撑',
+                    score: 12,
+                    details: [
+                        '价格在MA10附近企稳',
+                        'MA10向上拐头',
+                        '多次测试未跌破'
+                    ],
+                    checks: [
+                        '均线支撑有效',
+                        '短期资金护盘明显'
+                    ]
+                },
+                'bollinger_support': {
+                    name: '布林带下轨支撑',
+                    score: 10,
+                    details: [
+                        '价格触及布林下轨',
+                        '下轨向上倾斜',
+                        '开口未明显放大'
+                    ],
+                    checks: [
+                        '布林支撑有效',
+                        '波动率处于低位'
+                    ]
+                },
+                'volume_break': {
+                    name: '量能突破',
+                    score: 15,
+                    details: [
+                        '成交量放大1.5倍以上',
+                        '突破近期量能均值',
+                        '量价配合良好'
+                    ],
+                    checks: [
+                        '增量资金入场',
+                        '突破有效性高'
+                    ]
+                },
+                'limit_up_pullback': {
+                    name: '涨停回调',
+                    score: 20,
+                    details: [
+                        '近期有涨停记录',
+                        '回调幅度适中',
+                        '未破坏涨停结构'
+                    ],
+                    checks: [
+                        '主力仍在运作',
+                        '回调是二次买点'
+                    ]
+                },
+                'ma_alignment': {
+                    name: '均线多头排列',
+                    score: 12,
+                    details: [
+                        'MA5 > MA10 > MA20',
+                        '三线向上发散',
+                        '各周期均线协同'
+                    ],
+                    checks: [
+                        '中长期趋势向好',
+                        '持仓心态稳定'
+                    ]
+                }
+            };
+            
+            return signals[signalCode] || {
+                name: signalCode,
+                score: 10,
+                details: ['技术形态符合买入条件'],
+                checks: ['信号有效']
+            };
+        }
+        
+        // 渲染页面
+        async function renderPage() {
+            const code = getQueryParam('c');
+            const signals = decodeSignals(getQueryParam('s'));
+            const score = parseInt(getQueryParam('p')) || 0;
+            const time = getQueryParam('t') || '';
+            
+            if (!code) {
+                document.getElementById('main').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">🔍</div>
+                        <div class="empty-title">请输入股票代码</div>
+                        <div class="empty-desc">在推送链接中添加股票代码参数</div>
+                    </div>
+                `;
+                return;
+            }
+            
+            try {
+                // 获取股票实时数据
+                const response = await fetch(`https://qt.gtimg.cn/q=sz${code},sh${code}`);
+                const text = await response.text();
+                
+                // 解析数据
+                const match = text.match(/="([^"]+)"/);
+                const data = match ? match[1].split('~') : [];
+                
+                const name = data[1] || '未知';
+                const price = data[3] || '--';
+                const change = data[32] || '0';
+                const changePercent = data[31] || '0';
+                const volume = data[36] || '0';
+                const amount = data[37] || '0';
+                const high = data[33] || '--';
+                const low = data[34] || '--';
+                const open = data[5] || '--';
+                const preClose = data[4] || '--';
+                
+                // 计算涨跌颜色
+                const isUp = parseFloat(change) >= 0;
+                const priceClass = isUp ? 'price-up' : 'price-down';
+                const changeStr = (isUp ? '+' : '') + change + ' (' + (isUp ? '+' : '') + changePercent + '%)';
+                
+                // 渲染信号列表
+                let signalHtml = '';
+                let totalScore = 0;
+                
+                if (signals.length > 0) {
+                    signals.forEach(s => {
+                        const info = getSignalInfo(s);
+                        totalScore += info.score;
+                        signalHtml += `
+                            <div class="signal-card">
+                                <div class="signal-header">
+                                    <span class="signal-name">${info.name}</span>
+                                    <span class="signal-score">+${info.score}分</span>
+                                </div>
+                                ${info.details.map(d => `<div class="signal-detail">• ${d}</div>`).join('')}
+                                ${info.checks.map(c => `<div class="signal-check">${c}</div>`).join('')}
+                            </div>
+                        `;
+                    });
+                } else {
+                    // 默认显示综合分析
+                    signalHtml = `
+                        <div class="signal-card">
+                            <div class="signal-header">
+                                <span class="signal-name">综合技术分析</span>
+                                <span class="signal-score">+${score}分</span>
+                            </div>
+                            <div class="signal-detail">• 趋势形态良好</div>
+                            <div class="signal-detail">• 量能配合充足</div>
+                            <div class="signal-detail">• 指标共振看多</div>
+                            <div class="signal-check">综合评分达到买入标准</div>
+                        </div>
+                    `;
+                    totalScore = score;
+                }
+                
+                // 格式化成交额
+                const formatAmount = (v) => {
+                    const n = parseFloat(v) || 0;
+                    if (n >= 100000000) return (n / 100000000).toFixed(2) + '亿';
+                    if (n >= 10000) return (n / 10000).toFixed(0) + '万';
+                    return n.toFixed(0);
+                };
+                
+                // 格式化时间
+                const formatTime = (t) => {
+                    if (!t) return new Date().toLocaleString('zh-CN');
+                    try {
+                        return new Date(t).toLocaleString('zh-CN');
+                    } catch {
+                        return t;
+                    }
+                };
+                
+                // 计算止损位（-5%）
+                const stopLoss = (parseFloat(price) * 0.95).toFixed(2);
+                
+                // 渲染完整页面
+                document.getElementById('main').innerHTML = `
+                    <!-- 股票基本信息 -->
+                    <div class="stock-header">
+                        <div class="stock-name">${name}</div>
+                        <div class="stock-code">${code}</div>
+                        <div class="price-row">
+                            <div class="price-item">
+                                <div class="price-label">现价</div>
+                                <div class="price-value">¥${price}</div>
+                            </div>
+                            <div class="price-item">
+                                <div class="price-label">涨跌</div>
+                                <div class="price-value ${priceClass}">${changeStr}</div>
+                            </div>
+                            <div class="price-item">
+                                <div class="price-label">今高/今低</div>
+                                <div class="price-value">${high} / ${low}</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 综合评分 -->
+                    <div class="score-card">
+                        <div class="score-title">综合评分</div>
+                        <div class="score-circle" style="--score-percent: ${totalScore}%">
+                            <div class="score-inner">
+                                <div class="score-number">${totalScore}</div>
+                                <div class="score-max">/ 100</div>
+                            </div>
+                        </div>
+                        <div class="score-label">${totalScore >= 70 ? '🔥 强烈推荐' : totalScore >= 50 ? '📈 值得关注' : '⚠️ 谨慎参与'}</div>
+                    </div>
+                    
+                    <!-- 为什么选他 -->
+                    <div class="section-title">🎯 为什么选他？</div>
+                    <div class="signal-list">
+                        ${signalHtml}
+                    </div>
+                    
+                    <!-- 关键指标 -->
+                    <div class="section-title">📊 关键指标</div>
+                    <div class="indicators-grid">
+                        <div class="indicator-card">
+                            <div class="indicator-name">成交额</div>
+                            <div class="indicator-value">${formatAmount(amount)}</div>
+                        </div>
+                        <div class="indicator-card">
+                            <div class="indicator-name">换手率</div>
+                            <div class="indicator-value">${((parseFloat(volume) / 100) || 0).toFixed(2)}%</div>
+                        </div>
+                        <div class="indicator-card">
+                            <div class="indicator-name">开盘价</div>
+                            <div class="indicator-value">${open}</div>
+                        </div>
+                        <div class="indicator-card">
+                            <div class="indicator-name">昨收</div>
+                            <div class="indicator-value">${preClose}</div>
+                        </div>
+                    </div>
+                    
+                    <!-- 风险提示 -->
+                    <div class="risk-section">
+                        <div class="risk-title">⚠️ 风险提示</div>
+                        <div class="risk-item">控制仓位，不宜重仓单只</div>
+                        <div class="risk-item">建议止损位：¥${stopLoss}</div>
+                        <div class="risk-item">注意大盘系统性风险</div>
+                    </div>
+                    
+                    <!-- 交易建议 -->
+                    <div class="trading-section">
+                        <div class="trading-title">💡 交易建议</div>
+                        <div class="trading-item">
+                            <span class="trading-label">建议仓位</span>
+                            <span class="trading-value">5%-10%</span>
+                        </div>
+                        <div class="trading-item">
+                            <span class="trading-label">止损位</span>
+                            <span class="trading-value" style="color: var(--neon-red)">¥${stopLoss}</span>
+                        </div>
+                        <div class="trading-item">
+                            <span class="trading-label">止盈位</span>
+                            <span class="trading-value" style="color: var(--neon-green)">+8%-10%</span>
+                        </div>
+                        <div class="trading-item">
+                            <span class="trading-label">推荐理由</span>
+                            <span class="trading-value">${totalScore >= 70 ? '强信号' : totalScore >= 50 ? '值得关注' : '谨慎'}</span>
+                        </div>
+                    </div>
+                    
+                    <!-- 元信息 -->
+                    <div class="meta-info">
+                        分析时间：${formatTime(time)}<br>
+                        数据来源：腾讯财经 · 股坛狙击手
+                    </div>
+                `;
+                
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('main').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">❌</div>
+                        <div class="empty-title">加载失败</div>
+                        <div class="empty-desc">请检查网络后重试</div>
+                    </div>
+                `;
+            }
+        }
+        
+        // 页面加载完成后渲染
+        renderPage();
+    </script>
+</body>
+</html>
