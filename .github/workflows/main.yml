@@ -1,0 +1,36 @@
+name: Realtime Monitor
+on:
+  workflow_dispatch:
+  schedule:
+    # 每5分钟 (美东时间)
+    # 北京时间: 14:00-17:55, 20:00-22:55 (盘中时段)
+    - cron: '*/5 1-4,7-9 * * 1-5'
+
+jobs:
+  realtime-scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          
+      - name: Install dependencies
+        run: |
+          pip install requests pandas akshare
+          
+      - name: Run realtime monitor
+        env:
+          PUSH_KEY: ${{ secrets.PUSH_KEY }}
+        run: |
+          python realtime_monitor.py --mode realtime
+          
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        with:
+          name: realtime-results
+          path: data/
